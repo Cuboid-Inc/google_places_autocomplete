@@ -90,6 +90,19 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
           setState(() => _isLoading = isLoading);
         }
       },
+      // 5. Error Handling:
+      // Handle errors gracefully with the onError callback
+      onError: (error) {
+        debugPrint('Places API Error: ${error.code} - ${error.message}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${error.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
     );
 
     try {
@@ -105,14 +118,14 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _placesService.dispose(); // Important: dispose the places service
     super.dispose();
   }
 
   Future<void> _onPredictionTap(Prediction prediction) async {
     if (prediction.placeId == null) return;
 
-    final details =
-        await _placesService.getPlaceDetails(prediction.placeId!);
+    final details = await _placesService.getPlaceDetails(prediction.placeId!);
 
     if (mounted && details != null) {
       setState(() {

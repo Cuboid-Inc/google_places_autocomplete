@@ -103,10 +103,10 @@ public class GooglePlacesAutocompletePlugin: NSObject, FlutterPlugin {
                 return
             }
 
-            let mappedPredictions = predictions?.map { prediction -> [String: Any] in
+            let mappedPredictions = predictions?.map { prediction -> [String: Any?] in
                 return [
                     "placeId": prediction.placeID,
-                    "distanceMeters": prediction.distanceMeters?.intValue ?? 0,
+                    "distanceMeters": prediction.distanceMeters?.intValue,
                     "structuredFormat": [
                         "mainText": ["text": prediction.attributedPrimaryText.string],
                         "secondaryText": ["text": prediction.attributedSecondaryText?.string ?? ""]

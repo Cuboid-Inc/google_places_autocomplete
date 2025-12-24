@@ -40,7 +40,7 @@ A powerful, UI-agnostic Flutter package for Google Places API integration. Get a
 
 ```yaml
 dependencies:
-  google_places_autocomplete: ^0.1.1
+  google_places_autocomplete: ^1.0.0
 ```
 
 ### 3. Use

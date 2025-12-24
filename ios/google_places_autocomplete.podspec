@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'google_places_autocomplete'
-  s.version          = '0.1.1'
+  s.version          = '1.0.0'
   s.summary          = 'Google Places Autocomplete for Flutter'
   s.description      = <<-DESC
 Seamlessly integrate Google Places API into your Flutter app with this package.

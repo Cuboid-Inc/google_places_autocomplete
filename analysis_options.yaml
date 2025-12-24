@@ -1,4 +1,35 @@
 include: package:flutter_lints/flutter.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+# Additional analysis options for production-ready package
+analyzer:
+  errors:
+    # Treat missing documentation as info (not error) but still report
+    public_member_api_docs: info
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # Documentation
+    - public_member_api_docs
+
+    # Style
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - require_trailing_commas
+
+    # Error prevention
+    - avoid_print
+    - avoid_dynamic_calls
+    - cancel_subscriptions
+    - close_sinks
+
+    # Good practices
+    - prefer_single_quotes
+    - sort_constructors_first
+    - sort_unnamed_constructors_first
+    - unawaited_futures
+    - unnecessary_await_in_return
