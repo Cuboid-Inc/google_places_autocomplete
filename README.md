@@ -1,254 +1,203 @@
 # Google Places Autocomplete
 
-![Flutter 3.24.4](https://img.shields.io/badge/Flutter-3.24.4-blue)
+![Flutter 3.24+](https://img.shields.io/badge/Flutter-3.24+-blue)
 [![pub package](https://img.shields.io/pub/v/google_places_autocomplete.svg?label=google_places_autocomplete&color=blue)](https://pub.dev/packages/google_places_autocomplete)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Overview
+A powerful, UI-agnostic Flutter package for Google Places API integration. Get autocomplete predictions with **distance from user**, detailed place information, and full control over your UI.
 
-Google Places Autocomplete is a Flutter package that provides seamless integration with the Google Places API. This package enables developers to implement location search functionality with autocomplete suggestions, detailed place information, and more—all while maintaining complete control over the UI.
+## ✨ Features
 
-### Key Features
+- 🎨 **UI-Agnostic** - Bring your own UI, we handle the data
+- 📍 **Distance Support** - Show distance from user to each prediction
+- 🔐 **Platform-Native API Keys** - Read from AndroidManifest/Info.plist (no hardcoded keys!)
+- 🌍 **Cross-Platform** - Android, iOS
+- ⚡ **Performance Optimized** - Built-in debouncing
+- 🔧 **Highly Configurable** - Filter by country, place type, language
 
-- **UI-Agnostic Design**: Implement your own custom UI while the package handles data retrieval
-- **Autocomplete Search**: Get real-time location suggestions as users type
-- **Detailed Place Information**: Access comprehensive place data including addresses, coordinates, phone numbers, and more
-- **Cross-Platform Support**: Works on Android, iOS, Web, and desktop platforms
-- **Customizable Filtering**: Filter results by country, place type, or language
-- **Performance Optimized**: Built-in debounce functionality to reduce unnecessary API calls
+---
 
-## Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
+### 1. Platform Setup
 
-To use this package, you need:
+**Android** - Add to `AndroidManifest.xml`:
+```xml
+<application>
+    <meta-data
+        android:name="com.google.android.geo.API_KEY"
+        android:value="YOUR_API_KEY" />
+</application>
+```
 
-1. A Google Cloud Platform project with the **Places API** enabled
-2. An API key for accessing the Places API ([Get API Key](https://developers.google.com/maps/documentation/places/web-service/get-api-key))
+**iOS** - Add to `Info.plist`:
+```xml
+<key>GOOGLE_PLACES_API_KEY</key>
+<string>YOUR_API_KEY</string>
+```
 
-### Installation
-
-Add the following to your `pubspec.yaml` file:
+### 2. Install
 
 ```yaml
 dependencies:
-  google_places_autocomplete: ^0.1.0
+  google_places_autocomplete: ^0.1.1
 ```
 
-Then run:
-
-```bash
-flutter pub get
-```
-
-## Usage
-
-### Basic Setup
-
-Import the package:
+### 3. Use
 
 ```dart
 import 'package:google_places_autocomplete/google_places_autocomplete.dart';
-```
 
-Initialize the service with required parameters:
-
-```dart
-final placesService = GooglePlacesAutocomplete(
-  apiKey: 'YOUR_API_KEY',
-  predictionsListner: (predictions) {
-    // Handle the predictions here
-    setState(() {
-      _predictions = predictions;
-    });
+final places = GooglePlacesAutocomplete(
+  // Optional - reads from platform config if not provided
+  // apiKey: 'YOUR_KEY',
+  
+  // Optional - enables distance display in predictions
+  originLat: userLatitude,
+  originLng: userLongitude,
+  
+  predictionsListener: (predictions) {
+    for (final p in predictions) {
+      print('${p.title} - ${p.distanceMeters}m away');
+    }
   },
+  loadingListener: (isLoading) => print('Loading: $isLoading'),
 );
 
-// Always initialize the service before use
-placesService.initialize();
+await places.initialize();  // Important: await this!
+places.getPredictions('coffee shop');
 ```
 
-### Fetching Place Predictions
+---
 
-To get autocomplete predictions as the user types:
+## 📖 API Reference
+
+### Constructor Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `predictionsListener` | `Function(List<Prediction>)` | ✅ | Callback for predictions |
+| `loadingListener` | `Function(bool)` | ❌ | Loading state callback |
+| `apiKey` | `String?` | ❌ | API key (uses platform config if null) |
+| `originLat` | `double?` | ❌ | User latitude for distance calculation |
+| `originLng` | `double?` | ❌ | User longitude for distance calculation |
+| `debounceTime` | `int` | ❌ | Debounce in ms (default: 300, min: 200) |
+| `countries` | `List<String>?` | ❌ | Country codes e.g. `['us', 'ca']` |
+| `primaryTypes` | `List<String>?` | ❌ | Place types e.g. `['restaurant']` |
+| `language` | `String?` | ❌ | Language code e.g. `'en'` |
+
+### Methods
 
 ```dart
-// Call this method when the user enters text in the search field
-placesService.getPredictions('user input text');
+// Initialize (required, async)
+await places.initialize();
+
+// Get predictions
+places.getPredictions('search query');
+
+// Get place details
+final details = await places.getPredictionDetail('place_id');
+
+// Update user location (for distance)
+places.setOrigin(latitude: 37.7749, longitude: -122.4194);
+
+// Clear origin (disable distance)
+places.clearOrigin();
 ```
 
-### Fetch Place Details
-
-Once a user selects a prediction, you can fetch detailed information about the place:
+### Prediction Model
 
 ```dart
-final placeDetails = await placesService.getPredictionDetail('PLACE_ID');
-
-// Access various place details
-final address = placeDetails.formattedAddress;
-final phoneNumber = placeDetails.formattedPhoneNumber;
-final location = placeDetails.geometry?.location;
-final latitude = location?.lat;
-final longitude = location?.lng;
-```
-
-### Advanced Configuration
-
-The package supports several configuration options:
-
-```dart
-final placesService = GooglePlacesAutocomplete(
-  apiKey: 'YOUR_API_KEY',
-  debounceTime: 300,  // Milliseconds to wait before making API call (default: 300)
-  countries: ['us', 'ca'],  // Restrict results to specific countries
-  primaryTypes: ['restaurant', 'cafe'], // Filter results by place types
-  language: 'en',  // Specify the language for results
-  predictionsListner: (predictions) {
-    // Handle predictions
-  },
-  loadingListner: (isLoading) {
-    // Track loading state
-  },
-);
-```
-
-## Example
-
-A complete implementation example showing a search field with autocomplete predictions:
-
-```dart
-class PlaceSearchScreen extends StatefulWidget {
-  @override
-  _PlaceSearchScreenState createState() => _PlaceSearchScreenState();
-}
-
-class _PlaceSearchScreenState extends State<PlaceSearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final String _apiKey = 'YOUR_API_KEY';
-  late GooglePlacesAutocomplete _placesService;
-  List<Prediction> _predictions = [];
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _placesService = GooglePlacesAutocomplete(
-      apiKey: _apiKey,
-      predictionsListner: (predictions) {
-        setState(() {
-          _predictions = predictions;
-        });
-      },
-      loadingListner: (isLoading) {
-        setState(() {
-          _isLoading = isLoading;
-        });
-      },
-    );
-    _placesService.initialize();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            labelText: 'Search for a place',
-            suffixIcon: _isLoading 
-              ? CircularProgressIndicator() 
-              : Icon(Icons.search),
-          ),
-          onChanged: (value) {
-            if (value.isNotEmpty) {
-              _placesService.getPredictions(value);
-            } else {
-              setState(() {
-                _predictions = [];
-              });
-            }
-          },
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _predictions.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(_predictions[index].description ?? ''),
-                onTap: () async {
-                  final details = await _placesService.getPredictionDetail(
-                    _predictions[index].placeId ?? '',
-                  );
-                  // Do something with the place details
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+class Prediction {
+  final String? placeId;       // Use with getPredictionDetail()
+  final String? title;         // Main text
+  final String? description;   // Secondary text
+  final int? distanceMeters;   // Distance from origin (if set)
+  final List<String>? types;   // Place types
 }
 ```
 
-## Model Classes
+### PlaceDetails Model
 
-The package provides the following model classes:
+```dart
+class PlaceDetails {
+  final String? name;
+  final String? formattedAddress;
+  final Location? location;        // .lat, .lng
+  final String? nationalPhoneNumber;
+  final String? internationalPhoneNumber;
+  final String? googleMapsUri;
+  final String? websiteUri;
+  // ... and more
+}
+```
 
-### Prediction
+---
 
-Represents a place prediction from the Google Places API autocomplete endpoint.
+## 💡 Examples
 
-Key properties:
-- `description`: The human-readable name of the place
-- `placeId`: The ID of the place, which can be used to fetch detailed place information
-- `structuredFormatting`: Contains the main text and secondary text for the prediction
-- `types`: The types of the predicted place (e.g., 'restaurant', 'establishment')
+### Display Distance Badge
 
-### PlaceDetails
+```dart
+ListTile(
+  title: Text(prediction.title ?? ''),
+  subtitle: Text(prediction.description ?? ''),
+  trailing: prediction.distanceMeters != null
+      ? Text(_formatDistance(prediction.distanceMeters!))
+      : null,
+);
 
-Represents detailed information about a place.
+String _formatDistance(int meters) {
+  if (meters >= 1000) {
+    return '${(meters / 1000).toStringAsFixed(1)} km';
+  }
+  return '$meters m';
+}
+```
 
-Key properties:
-- `name`: The name of the place
-- `formattedAddress`: The complete address of the place
-- `formattedPhoneNumber`: The phone number in international format
-- `nationalPhoneNumber`: The phone number in local format
-- `website`: The website URL
-- `rating`: The average rating (out of 5)
-- `userRatingsTotal`: Total number of user ratings
-- `geometry`: Contains location information (latitude and longitude)
+### Filter by Country
 
-## Platform Support
+```dart
+GooglePlacesAutocomplete(
+  countries: ['pk', 'ae'],  // Pakistan & UAE only
+  predictionsListener: (p) => setState(() => predictions = p),
+);
+```
 
-This package works on:
+### Get Coordinates from Selection
 
-- Android
-- iOS
-- Web
-- macOS
-- Windows
-- Linux
+```dart
+onTap: () async {
+  final details = await places.getPredictionDetail(prediction.placeId!);
+  final lat = details?.location?.lat;
+  final lng = details?.location?.lng;
+  // Use coordinates...
+}
+```
 
-## Troubleshooting
+---
 
-### Common Issues
+## ⚠️ Breaking Changes (v0.1.1)
 
-1. **No predictions returned**: Ensure your API key has the Places API enabled and has proper restrictions set.
+| Change | Before | After |
+|--------|--------|-------|
+| Listener names | `predictionsListner` | `predictionsListener` |
+| | `loadingListner` | `loadingListener` |
+| Initialize | `initialize()` (sync) | `await initialize()` (async) |
+| API key | Required | Optional (platform fallback) |
 
-2. **Web platform issues**: Make sure your API key is properly configured with allowed referrers/domains.
+---
 
-3. **Invalid API key**: Check that your API key is correct and properly formatted.
+## 🔧 Troubleshooting
 
-## License
+| Issue | Solution |
+|-------|----------|
+| No predictions | Ensure Places API is enabled in Google Cloud Console |
+| No distance shown | Provide `originLat` and `originLng` |
+| API key not found | Check platform manifest/plist configuration |
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
 
-## Contributing
+## 📄 License
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Acknowledgements
-
-- Google Places API for providing the location data services
+MIT License - see [LICENSE](LICENSE) for details.

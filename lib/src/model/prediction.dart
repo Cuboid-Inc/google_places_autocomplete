@@ -38,6 +38,10 @@ class Prediction {
   /// Structured formatting information for the place prediction
   final StructuredFormatting? structuredFormatting;
 
+  /// The distance in meters from the origin (user's location) to this place.
+  /// Only available when origin is provided in the autocomplete request.
+  final int? distanceMeters;
+
   /// Constructs a [Prediction] object.
   ///
   /// All parameters are optional.
@@ -47,6 +51,7 @@ class Prediction {
     this.description,
     this.types,
     this.structuredFormatting,
+    this.distanceMeters,
   });
 
   /// Creates a copy of the current [Prediction] instance with optional updated values.
@@ -58,6 +63,7 @@ class Prediction {
     String? description,
     List<String>? types,
     StructuredFormatting? structuredFormatting,
+    int? distanceMeters,
   }) {
     return Prediction(
       placeId: placeId ?? this.placeId,
@@ -65,6 +71,7 @@ class Prediction {
       description: description ?? this.description,
       types: types ?? this.types,
       structuredFormatting: structuredFormatting ?? this.structuredFormatting,
+      distanceMeters: distanceMeters ?? this.distanceMeters,
     );
   }
 
@@ -76,6 +83,7 @@ class Prediction {
       'placeId': placeId,
       'title': title,
       'description': description,
+      'distanceMeters': distanceMeters,
     };
   }
 
@@ -88,6 +96,7 @@ class Prediction {
       placeId: map['placeId'],
       title: map['structuredFormat']?['mainText']?['text'],
       description: map['structuredFormat']?['secondaryText']?['text'],
+      distanceMeters: map['distanceMeters'] as int?,
     );
   }
 }

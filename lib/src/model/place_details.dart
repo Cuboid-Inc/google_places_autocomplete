@@ -159,44 +159,60 @@ class PlaceDetails {
   ///
   /// The map should be fetched from a Google Places API response.
   factory PlaceDetails.fromMap(Map<dynamic, dynamic> map) {
-    String? extractAddressComponent(List<dynamic> components, String type) {
-      for (var component in components) {
-        if ((component['types'] as List).contains(type)) {
-          return component['longText'];
+    // Safely extract address components list
+    final rawAddressComponents = map['addressComponents'];
+    final List<dynamic>? addressComponents =
+        rawAddressComponents is List ? rawAddressComponents : null;
+
+    String? extractAddressComponent(String type) {
+      if (addressComponents == null) return null;
+      for (var component in addressComponents) {
+        if (component is! Map) continue;
+        final rawTypes = component['types'];
+        final List<dynamic>? types = rawTypes is List ? rawTypes : null;
+        if (types != null && types.contains(type)) {
+          return component['longText'] as String?;
         }
       }
       return null;
     }
 
+    // Safely extract location
+    Location? location;
+    final rawLocation = map['location'];
+    if (rawLocation != null && rawLocation is Map) {
+      location = Location.fromMap(Map<String, dynamic>.from(rawLocation));
+    }
+
+    // Safely extract geometry
+    Geometry? geometry;
+    final rawGeometry = map['geometry'];
+    if (rawGeometry != null && rawGeometry is Map) {
+      geometry = Geometry.fromJson(Map<String, dynamic>.from(rawGeometry));
+    }
+
     return PlaceDetails(
-      name: map['name'],
-      nationalPhoneNumber: map['nationalPhoneNumber'],
-      internationalPhoneNumber: map['internationalPhoneNumber'],
-      formattedPhoneNumber: map['formattedPhoneNumber'],
-      formattedAddress: map['formattedAddress'],
-      streetAddress: extractAddressComponent(map['addressComponents'], 'route'),
-      streetNumber:
-          extractAddressComponent(map['addressComponents'], 'street_number'),
-      city: extractAddressComponent(map['addressComponents'], 'locality'),
-      state: extractAddressComponent(
-          map['addressComponents'], 'administrative_area_level_1'),
-      region: extractAddressComponent(
-          map['addressComponents'], 'administrative_area_level_2'),
-      zipCode: extractAddressComponent(map['addressComponents'], 'postal_code'),
-      country: extractAddressComponent(map['addressComponents'], 'country'),
-      location: map['location'] != null
-          ? Location.fromMap(map['location'] as Map<String, dynamic>)
-          : null,
-      googleMapsUri:
-          map['googleMapsUri'] != null ? map['googleMapsUri'] as String : null,
-      websiteUri:
-          map['websiteUri'] != null ? map['websiteUri'] as String : null,
+      name: map['name'] as String?,
+      nationalPhoneNumber: map['nationalPhoneNumber'] as String?,
+      internationalPhoneNumber: map['internationalPhoneNumber'] as String?,
+      formattedPhoneNumber: map['formattedPhoneNumber'] as String?,
+      formattedAddress: map['formattedAddress'] as String?,
+      streetAddress: extractAddressComponent('route'),
+      streetNumber: extractAddressComponent('street_number'),
+      city: extractAddressComponent('locality'),
+      state: extractAddressComponent('administrative_area_level_1'),
+      region: extractAddressComponent('administrative_area_level_2'),
+      zipCode: extractAddressComponent('postal_code'),
+      country: extractAddressComponent('country'),
+      location: location,
+      googleMapsUri: map['googleMapsUri'] as String?,
+      websiteUri: map['websiteUri'] as String?,
       website: map['website'] as String?,
       rating: map['rating'] != null ? (map['rating'] as num).toDouble() : null,
-      userRatingsTotal: map['userRatingsTotal'] as int?,
-      geometry: map['geometry'] != null
-          ? Geometry.fromJson(map['geometry'] as Map<String, dynamic>)
+      userRatingsTotal: map['userRatingsTotal'] is int
+          ? map['userRatingsTotal'] as int
           : null,
+      geometry: geometry,
     );
   }
 }

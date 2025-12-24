@@ -14,26 +14,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Google Places Autocomplete Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.blue, width: 2),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          filled: true,
-          fillColor: Colors.grey.shade100,
-        ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -51,55 +33,73 @@ class PlacesAutocompleteScreen extends StatefulWidget {
   const PlacesAutocompleteScreen({super.key});
 
   @override
-  PlacesAutocompleteScreenState createState() =>
-      PlacesAutocompleteScreenState();
+  State<PlacesAutocompleteScreen> createState() =>
+      _PlacesAutocompleteScreenState();
 }
 
-class PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
-  /// The Google Places API key (replace with your actual API key).
-  final String _apiKey = "YOUR_API_KEY";
-
-  /// The autocomplete service instance.
+class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
+  final _searchController = TextEditingController();
   late GooglePlacesAutocomplete _placesService;
 
-  /// List to store predictions for display.
   List<Prediction> _predictions = [];
+  bool _isLoading = false;
+  PlaceDetails? _selectedPlace;
+  bool _isInitialized = false;
 
-  /// Tracks the loading state of predictions
-  bool _isPredictionLoading = false;
-
-  /// Details of the selected place.
-  PlaceDetails? _placeDetails;
-
-  /// Tracks the loading state of place details
-  bool _isDetailsLoading = false;
+  // Example user location (San Francisco)
+  // In production, get this from Geolocator or location services
+  static const double _userLat = 37.7749;
+  static const double _userLng = -122.4194;
 
   @override
   void initState() {
     super.initState();
+    // Initialize the places service
+    // Note: Initialization is async and connects to the native platform
+    _initPlacesService();
+  }
 
-    // Initialize the GooglePlacesAutocomplete service.
+  Future<void> _initPlacesService() async {
     _placesService = GooglePlacesAutocomplete(
-      apiKey: _apiKey,
-      debounceTime: 300,
-      countries: ['us', 'ca'], // Optional: Filter by countries
-      language: 'en', // Optional: Set language
-      predictionsListner: (predictions) {
-        setState(() {
-          _predictions = predictions;
-        });
+      // 1. API Key:
+      // The package will automatically read 'com.google.android.geo.API_KEY' from AndroidManifest
+      // and 'GOOGLE_PLACES_API_KEY' from Info.plist.
+      // You can also pass it explicitly here:
+      // apiKey: 'YOUR_API_KEY',
+
+      // 2. Distance:
+      // Provide user location to get distance metrics in predictions
+      originLat: _userLat,
+      originLng: _userLng,
+
+      // 3. Filters:
+      // Optional: Filter by country (ISO 3166-1 Alpha-2)
+      countries: ['us'],
+      // Optional: Filter by place types
+      // placeTypes: ['restaurant'],
+
+      // 4. UI Updates:
+      debounceTime: 500, // Smoother typing experience
+      predictionsListener: (predictions) {
+        if (mounted) {
+          setState(() => _predictions = predictions);
+        }
       },
-      loadingListner: (isPredictionLoading) {
-        setState(() {
-          _isPredictionLoading = isPredictionLoading;
-        });
+      loadingListener: (isLoading) {
+        if (mounted) {
+          setState(() => _isLoading = isLoading);
+        }
       },
     );
 
-    // Start the service.
-    _placesService.initialize();
+    try {
+      await _placesService.initialize();
+      if (mounted) {
+        setState(() => _isInitialized = true);
+      }
+    } catch (e) {
+      debugPrint("Failed to initialize Places Service: $e");
+    }
   }
 
   @override
@@ -108,210 +108,191 @@ class PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
     super.dispose();
   }
 
-  /// Fetches details of the selected place using its placeId.
-  Future<void> _fetchPlaceDetails(String placeId) async {
-    if (!mounted) return;
+  Future<void> _onPredictionTap(Prediction prediction) async {
+    if (prediction.placeId == null) return;
 
-    setState(() {
-      _isDetailsLoading = true;
-    });
+    final details =
+        await _placesService.getPlaceDetails(prediction.placeId!);
 
-    try {
-      final details = await _placesService.getPredictionDetail(placeId);
-      if (!mounted) return;
-
+    if (mounted && details != null) {
       setState(() {
-        _placeDetails = details;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      // Show error snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error fetching place details: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isDetailsLoading = false;
+        _selectedPlace = details;
+        _predictions = [];
+        _searchController.text = prediction.title ?? '';
       });
     }
   }
 
+  /// Format distance in a human-readable way
+  String _formatDistance(int meters) {
+    if (meters >= 1000) {
+      final km = meters / 1000;
+      return km >= 10 ? '${km.round()} km' : '${km.toStringAsFixed(1)} km';
+    }
+    return '$meters m';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Places Autocomplete'),
+        title: const Text('Places Autocomplete'),
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Search input field
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search for a place',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _predictions = [];
-                          });
-                        },
-                      )
-                    : _isPredictionLoading
-                        ? Transform.scale(
-                            scale: 0.5,
-                            child: const CircularProgressIndicator(),
-                          )
-                        : null,
-              ),
-              onChanged: (value) {
-                if (value.isNotEmpty) {
-                  _placesService.getPredictions(value);
-                } else {
-                  setState(() {
-                    _predictions = [];
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Search results
-            Expanded(
-              child: _predictions.isEmpty
-                  ? Center(
-                      child: Text(
-                        _searchController.text.isEmpty
-                            ? 'Start typing to search for places'
-                            : 'No results found',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _predictions.length,
-                      itemBuilder: (context, index) {
-                        final prediction = _predictions[index];
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              child: Icon(
-                                _getIconForType(
-                                    prediction.types?.firstOrNull ?? ''),
-                                size: 18,
+      body: !_isInitialized
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Search Field
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search for a place...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _isLoading
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
-                            ),
-                            title: Text(prediction.description ?? ''),
-                            subtitle: Text(prediction
-                                    .structuredFormatting?.secondaryText ??
-                                ''),
-                            onTap: () {
-                              _fetchPlaceDetails(prediction.placeId ?? '');
+                            )
+                          : _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _predictions = []);
+                                  },
+                                )
+                              : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value.isNotEmpty) {
+                        _placesService.getPredictions(value);
+                      } else {
+                        setState(() => _predictions = []);
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Predictions List
+                  Expanded(
+                    child: _predictions.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.separated(
+                            itemCount: _predictions.length,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final prediction = _predictions[index];
+                              return _buildPredictionTile(prediction);
                             },
                           ),
-                        );
-                      },
-                    ),
-            ),
+                  ),
 
-            // Display selected place details
-            if (_placeDetails != null) ...[
-              const Divider(),
-              const Text(
-                'Place Details:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  // Selected Place Details
+                  if (_selectedPlace != null) ...[
+                    const Divider(height: 32),
+                    _buildPlaceDetails(_selectedPlace!, theme),
+                  ],
+                ],
               ),
-              const SizedBox(height: 8),
-              _isDetailsLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _buildPlaceDetailsCard(_placeDetails!),
-            ],
-          ],
-        ),
+            ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Text(
+        _searchController.text.isEmpty
+            ? 'Start typing to search'
+            : 'No results found',
+        style: TextStyle(color: Colors.grey[600]),
       ),
     );
   }
 
-  /// Builds the card to display place details
-  Widget _buildPlaceDetailsCard(PlaceDetails details) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildPredictionTile(Prediction prediction) {
+    return ListTile(
+      leading: const CircleAvatar(
+        child: Icon(Icons.location_on, size: 20),
       ),
+      title: Text(
+        prediction.title ?? '',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        prediction.description ?? '',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: Colors.grey[600]),
+      ),
+      // NEW: Distance badge
+      trailing: prediction.distanceMeters != null
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                _formatDistance(prediction.distanceMeters!),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+          : null,
+      onTap: () => _onPredictionTap(prediction),
+    );
+  }
+
+  Widget _buildPlaceDetails(PlaceDetails details, ThemeData theme) {
+    return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              details.name ?? 'Unknown Location',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              details.name ?? 'Selected Place',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Colors.red, size: 16),
-                const SizedBox(width: 4),
-                Expanded(
-                  child:
-                      Text(details.formattedAddress ?? 'Address not available'),
-                ),
-              ],
-            ),
-            if (details.formattedPhoneNumber != null) ...[
-              const SizedBox(height: 8),
+            if (details.formattedAddress != null)
               Row(
                 children: [
-                  const Icon(Icons.phone, color: Colors.green, size: 16),
-                  const SizedBox(width: 4),
-                  Text(details.formattedPhoneNumber!),
+                  const Icon(Icons.location_on, size: 16, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(details.formattedAddress!)),
                 ],
               ),
-            ],
-            if (details.website != null) ...[
+            if (details.location != null) ...[
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.language, color: Colors.blue, size: 16),
-                  const SizedBox(width: 4),
-                  Expanded(
-                      child: Text(details.website!,
-                          overflow: TextOverflow.ellipsis)),
-                ],
-              ),
-            ],
-            if (details.rating != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
+                  const Icon(Icons.pin_drop, size: 16, color: Colors.purple),
+                  const SizedBox(width: 8),
                   Text(
-                      '${details.rating} (${details.userRatingsTotal} reviews)'),
-                ],
-              ),
-            ],
-            if (details.geometry?.location != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.pin_drop, color: Colors.purple, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Lat: ${details.geometry!.location!.lat}, Lng: ${details.geometry!.location!.lng}',
-                    style:
-                        const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                    '${details.location!.lat.toStringAsFixed(4)}, ${details.location!.lng.toStringAsFixed(4)}',
+                    style: const TextStyle(fontFamily: 'monospace'),
                   ),
                 ],
               ),
@@ -320,39 +301,5 @@ class PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
         ),
       ),
     );
-  }
-
-  /// Returns an appropriate icon based on the place type
-  IconData _getIconForType(String type) {
-    switch (type) {
-      case 'restaurant':
-      case 'food':
-      case 'cafe':
-        return Icons.restaurant;
-      case 'store':
-      case 'shopping_mall':
-      case 'supermarket':
-        return Icons.shopping_cart;
-      case 'lodging':
-      case 'hotel':
-        return Icons.hotel;
-      case 'hospital':
-      case 'doctor':
-      case 'pharmacy':
-        return Icons.local_hospital;
-      case 'airport':
-      case 'bus_station':
-      case 'train_station':
-      case 'transit_station':
-        return Icons.directions_transit;
-      case 'park':
-      case 'natural_feature':
-        return Icons.park;
-      case 'point_of_interest':
-      case 'tourist_attraction':
-        return Icons.attractions;
-      default:
-        return Icons.location_on;
-    }
   }
 }
