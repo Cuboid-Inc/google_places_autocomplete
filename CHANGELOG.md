@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2025-12-25
+
+### 📚 Documentation
+
+- **Corrected API Key Documentation** - Updated all code examples to show `apiKey` as a parameter of `initialize()` method (not constructor)
+- **Fixed README Examples** - Quick Start and API Reference now correctly demonstrate `apiKey` usage
+- **Updated Migration Guide** - Clarified the async initialization pattern with optional API key
+
+---
+
 ## [2.0.0] - 2025-12-25
 
 ### 🚀 Major SDK Upgrade
@@ -81,7 +91,10 @@ final places = GooglePlacesAutocomplete(
   predictionsListener: (p) => ...,  // Fixed spelling
   loadingListener: (l) => ...,      // Fixed spelling
 );
-await places.initialize();  // Async!
+await places.initialize(
+   // Optional - reads from platform config if not provided
+  // apiKey: 'YOUR_KEY',
+);  // Async!
 ```
 
 ---

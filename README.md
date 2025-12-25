@@ -40,7 +40,7 @@ A powerful, UI-agnostic Flutter package for Google Places API integration. Get a
 
 ```yaml
 dependencies:
-  google_places_autocomplete: ^2.0.0
+  google_places_autocomplete: ^2.0.1
 ```
 
 ### 3. Use
@@ -48,10 +48,7 @@ dependencies:
 ```dart
 import 'package:google_places_autocomplete/google_places_autocomplete.dart';
 
-final places = GooglePlacesAutocomplete(
-  // Optional - reads from platform config if not provided
-  // apiKey: 'YOUR_KEY',
-  
+final places = GooglePlacesAutocomplete(  
   // Optional - enables distance display in predictions
   originLat: userLatitude,
   originLng: userLongitude,
@@ -64,7 +61,10 @@ final places = GooglePlacesAutocomplete(
   loadingListener: (isLoading) => print('Loading: $isLoading'),
 );
 
-await places.initialize();  // Important: await this!
+await places.initialize(
+   // Optional - reads from platform config if not provided
+  // apiKey: 'YOUR_KEY',
+);  // Important: await this!
 places.getPredictions('coffee shop');
 ```
 
@@ -78,7 +78,6 @@ places.getPredictions('coffee shop');
 |-----------|------|----------|-------------|
 | `predictionsListener` | `Function(List<Prediction>)` | ✅ | Callback for predictions |
 | `loadingListener` | `Function(bool)` | ❌ | Loading state callback |
-| `apiKey` | `String?` | ❌ | API key (uses platform config if null) |
 | `originLat` | `double?` | ❌ | User latitude for distance calculation |
 | `originLng` | `double?` | ❌ | User longitude for distance calculation |
 | `debounceTime` | `int` | ❌ | Debounce in ms (default: 300, min: 200) |
@@ -90,7 +89,10 @@ places.getPredictions('coffee shop');
 
 ```dart
 // Initialize (required, async)
-await places.initialize();
+await places.initialize(
+  // Optional - reads from platform config if not provided
+  // apiKey: 'YOUR_KEY',
+);
 
 // Get predictions
 places.getPredictions('search query');
