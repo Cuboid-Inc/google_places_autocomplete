@@ -13,7 +13,6 @@
 /// }
 /// ```
 class PlacesException implements Exception {
-
   /// Creates a [PlacesException] with the given [message].
   ///
   /// Optionally provide a [code] and [details] for more context.
@@ -22,6 +21,7 @@ class PlacesException implements Exception {
     this.code,
     this.details,
   });
+
   /// Human-readable error message describing what went wrong.
   final String message;
 

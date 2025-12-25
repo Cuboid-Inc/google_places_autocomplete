@@ -15,7 +15,7 @@ Seamlessly integrate Google Places API into your Flutter app with this package.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'GooglePlaces', '9.2.0'
+  s.dependency 'GooglePlaces', '10.6.0'
   s.platform = :ios, '14.0'
 
   # Flutter.framework does not contain a i386 slice.

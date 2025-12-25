@@ -130,7 +130,7 @@ public class GooglePlacesAutocompletePlugin: NSObject, FlutterPlugin {
             return
         }
 
-        // Specify fields
+        // Specify all available fields for comprehensive place details
         let fields: GMSPlaceField = [
             .name,
             .placeID,
@@ -140,7 +140,11 @@ public class GooglePlacesAutocompletePlugin: NSObject, FlutterPlugin {
             .website,
             .rating,
             .userRatingsTotal,
-            .addressComponents
+            .addressComponents,
+            .openingHours,
+            .utcOffsetMinutes,
+            .businessStatus,
+            .types
         ]
 
         client.fetchPlace(fromPlaceID: placeId, placeFields: fields, sessionToken: sessionToken, callback: { (place, error) in
@@ -157,22 +161,83 @@ public class GooglePlacesAutocompletePlugin: NSObject, FlutterPlugin {
                 return
             }
             
-            var details: [String: Any] = [
-                "placeId": place.placeID ?? "",
-                "name": place.name ?? "",
-                "formattedAddress": place.formattedAddress ?? "",
-                "phoneNumber": place.phoneNumber ?? "",
-                "rating": place.rating,
-                "userRatingsTotal": place.userRatingsTotal
-            ]
+            var details: [String: Any?] = [:]
             
+            // Basic fields
+            details["placeId"] = place.placeID
+            details["name"] = place.name
+            details["formattedAddress"] = place.formattedAddress
+            
+            // Phone numbers - iOS SDK only provides one phone number field
+            // We'll use it for both national and formatted phone number
+            details["nationalPhoneNumber"] = place.phoneNumber
+            details["internationalPhoneNumber"] = place.phoneNumber
+            details["formattedPhoneNumber"] = place.phoneNumber
+            
+            // URLs
             if let website = place.website {
                 details["websiteUri"] = website.absoluteString
             }
             
+            // Google Maps URI - construct from placeId since iOS SDK doesn't provide it directly
+            if let pid = place.placeID {
+                details["googleMapsUri"] = "https://www.google.com/maps/place/?q=place_id:\(pid)"
+            }
+            
+            // Ratings
+            details["rating"] = place.rating
+            details["userRatingsTotal"] = Int(place.userRatingsTotal)
+            
+            // Location
             details["location"] = [
-                "lat": place.coordinate.latitude,
-                "lng": place.coordinate.longitude
+                "latitude": place.coordinate.latitude,
+                "longitude": place.coordinate.longitude
+            ]
+            
+            // Address components - serialize as list of maps
+            if let addressComponents = place.addressComponents {
+                let componentsList = addressComponents.map { component -> [String: Any?] in
+                    return [
+                        "longText": component.name,
+                        "shortText": component.shortName,
+                        "types": component.types
+                    ]
+                }
+                details["addressComponents"] = componentsList
+            }
+            
+            // Business status
+            switch place.businessStatus {
+            case .operational:
+                details["businessStatus"] = "OPERATIONAL"
+            case .closedTemporarily:
+                details["businessStatus"] = "CLOSED_TEMPORARILY"
+            case .closedPermanently:
+                details["businessStatus"] = "CLOSED_PERMANENTLY"
+            default:
+                details["businessStatus"] = nil
+            }
+            
+            // Types
+            details["types"] = place.types
+            
+            // UTC offset
+            if place.utcOffsetMinutes != nil {
+                details["utcOffset"] = Int(truncating: place.utcOffsetMinutes!)
+            }
+            
+            // Viewport - not available in iOS SDK v10.6.0, construct from coordinate
+            // The iOS SDK does not expose viewport, so we create a small viewport around the coordinate
+            let delta = 0.01 // Approximately 1km
+            details["viewport"] = [
+                "northeast": [
+                    "latitude": place.coordinate.latitude + delta,
+                    "longitude": place.coordinate.longitude + delta
+                ],
+                "southwest": [
+                    "latitude": place.coordinate.latitude - delta,
+                    "longitude": place.coordinate.longitude - delta
+                ]
             ]
             
             result(details)

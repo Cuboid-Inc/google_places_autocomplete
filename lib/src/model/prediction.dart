@@ -10,7 +10,6 @@
 /// print('Secondary: ${formatting?.secondaryText}');
 /// ```
 class StructuredFormatting {
-
   /// Constructs a [StructuredFormatting] object.
   const StructuredFormatting({
     this.mainText,
@@ -24,6 +23,7 @@ class StructuredFormatting {
       secondaryText: json['secondary_text'] as String?,
     );
   }
+
   /// The main text portion of the prediction's description.
   ///
   /// This is typically the name of the place (e.g., "Starbucks").
@@ -77,7 +77,6 @@ class StructuredFormatting {
 /// }
 /// ```
 class Prediction {
-
   /// Constructs a [Prediction] object.
   const Prediction({
     this.placeId,
@@ -100,6 +99,7 @@ class Prediction {
       distanceMeters: map['distanceMeters'] as int?,
     );
   }
+
   /// The unique identifier of the place.
   ///
   /// Use this with [GooglePlacesAutocomplete.getPlaceDetails] to fetch

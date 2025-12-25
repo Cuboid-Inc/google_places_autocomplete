@@ -123,16 +123,25 @@ class GooglePlacesAutocompletePlugin: FlutterPlugin, MethodCallHandler {
             return
         }
 
+        // Request all available fields for comprehensive place details
         val placeFields = listOf(
             Place.Field.ID,
-            Place.Field.NAME,
-            Place.Field.ADDRESS,
-            Place.Field.LAT_LNG,
-            Place.Field.PHONE_NUMBER,
+            Place.Field.DISPLAY_NAME,
+            Place.Field.FORMATTED_ADDRESS,
+            Place.Field.LOCATION,
+            Place.Field.NATIONAL_PHONE_NUMBER,
+            Place.Field.INTERNATIONAL_PHONE_NUMBER,
             Place.Field.WEBSITE_URI,
+            Place.Field.GOOGLE_MAPS_URI,
             Place.Field.RATING,
-            Place.Field.USER_RATINGS_TOTAL,
-            Place.Field.ADDRESS_COMPONENTS
+            Place.Field.USER_RATING_COUNT,
+            Place.Field.ADDRESS_COMPONENTS,
+            Place.Field.TYPES,
+            Place.Field.BUSINESS_STATUS,
+            Place.Field.OPENING_HOURS,
+            Place.Field.UTC_OFFSET,
+            Place.Field.PLUS_CODE,
+            Place.Field.VIEWPORT
         )
 
         val request = FetchPlaceRequest.builder(placeId, placeFields)
@@ -146,18 +155,70 @@ class GooglePlacesAutocompletePlugin: FlutterPlugin, MethodCallHandler {
                 
                 val place = response.place
                 val details = mutableMapOf<String, Any?>()
+                
+                // Basic fields
                 details["placeId"] = place.id
-                details["name"] = place.name
-                details["formattedAddress"] = place.address
-                details["phoneNumber"] = place.phoneNumber
+                details["name"] = place.displayName
+                details["formattedAddress"] = place.formattedAddress
+                
+                // Phone numbers - use correct key names matching Dart model
+                details["nationalPhoneNumber"] = place.nationalPhoneNumber
+                details["internationalPhoneNumber"] = place.internationalPhoneNumber
+                
+                // URLs
                 details["websiteUri"] = place.websiteUri?.toString()
+                details["googleMapsUri"] = place.googleMapsUri?.toString()
+                
+                // Ratings
                 details["rating"] = place.rating
-                details["userRatingsTotal"] = place.userRatingsTotal
-
-                if (place.latLng != null) {
+                details["userRatingsTotal"] = place.userRatingCount
+                
+                // Location
+                if (place.location != null) {
                     details["location"] = mapOf(
-                        "lat" to place.latLng!!.latitude,
-                        "lng" to place.latLng!!.longitude
+                        "latitude" to place.location!!.latitude,
+                        "longitude" to place.location!!.longitude
+                    )
+                }
+                
+                // Address components - serialize as list of maps
+                val addressComponentsList = place.addressComponents?.asList()?.map { component ->
+                    mapOf(
+                        "longText" to component.name,
+                        "shortText" to component.shortName,
+                        "types" to component.types
+                    )
+                }
+                details["addressComponents"] = addressComponentsList
+                
+                // Business status
+                details["businessStatus"] = place.businessStatus?.name
+                
+                // Types
+                details["types"] = place.placeTypes
+                
+                // UTC offset
+                details["utcOffset"] = place.utcOffsetMinutes
+                
+                // Plus code
+                if (place.plusCode != null) {
+                    details["plusCode"] = mapOf(
+                        "globalCode" to place.plusCode?.globalCode,
+                        "compoundCode" to place.plusCode?.compoundCode
+                    )
+                }
+                
+                // Viewport
+                if (place.viewport != null) {
+                    details["viewport"] = mapOf(
+                        "northeast" to mapOf(
+                            "latitude" to place.viewport?.northeast?.latitude,
+                            "longitude" to place.viewport?.northeast?.longitude
+                        ),
+                        "southwest" to mapOf(
+                            "latitude" to place.viewport?.southwest?.latitude,
+                            "longitude" to place.viewport?.southwest?.longitude
+                        )
                     )
                 }
                 

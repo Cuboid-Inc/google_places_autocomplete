@@ -61,24 +61,18 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
 
   Future<void> _initPlacesService() async {
     _placesService = GooglePlacesAutocomplete(
-      // 1. API Key:
-      // The package will automatically read 'com.google.android.geo.API_KEY' from AndroidManifest
-      // and 'GOOGLE_PLACES_API_KEY' from Info.plist.
-      // You can also pass it explicitly here:
-      // apiKey: 'YOUR_API_KEY',
-
-      // 2. Distance:
+      // 1. Distance:
       // Provide user location to get distance metrics in predictions
       originLat: _userLat,
       originLng: _userLng,
 
-      // 3. Filters:
+      // 2. Filters:
       // Optional: Filter by country (ISO 3166-1 Alpha-2)
       countries: ['us'],
       // Optional: Filter by place types
       // placeTypes: ['restaurant'],
 
-      // 4. UI Updates:
+      // 3. UI Updates:
       debounceTime: 500, // Smoother typing experience
       predictionsListener: (predictions) {
         if (mounted) {
@@ -90,7 +84,7 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
           setState(() => _isLoading = isLoading);
         }
       },
-      // 5. Error Handling:
+      // 4. Error Handling:
       // Handle errors gracefully with the onError callback
       onError: (error) {
         debugPrint('Places API Error: ${error.code} - ${error.message}');
@@ -106,7 +100,13 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
     );
 
     try {
-      await _placesService.initialize();
+      await _placesService.initialize(
+        // API Key
+        // The package will automatically read 'com.google.android.geo.API_KEY' from AndroidManifest
+        // and 'GOOGLE_PLACES_API_KEY' from Info.plist.
+        // You can also pass it explicitly here:
+        apiKey: 'YOUR_API_KEY',
+      );
       if (mounted) {
         setState(() => _isInitialized = true);
       }
@@ -181,6 +181,7 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
                                   icon: const Icon(Icons.clear),
                                   onPressed: () {
                                     _searchController.clear();
+                                    _selectedPlace = null;
                                     setState(() => _predictions = []);
                                   },
                                 )
@@ -310,6 +311,13 @@ class _PlacesAutocompleteScreenState extends State<PlacesAutocompleteScreen> {
                 ],
               ),
             ],
+            const SizedBox(height: 16),
+            if (details.addressComponents != null)
+              Text(
+                  details.addressComponents!
+                      .map((e) => e.toString())
+                      .join("\n\n"),
+                  style: theme.textTheme.bodyMedium),
           ],
         ),
       ),

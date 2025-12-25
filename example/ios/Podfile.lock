@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - google_places_autocomplete (1.0.0):
+    - Flutter
+    - GooglePlaces (= 10.6.0)
+  - GooglePlaces (10.6.0)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - google_places_autocomplete (from `.symlinks/plugins/google_places_autocomplete/ios`)
+
+SPEC REPOS:
+  trunk:
+    - GooglePlaces
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  google_places_autocomplete:
+    :path: ".symlinks/plugins/google_places_autocomplete/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  google_places_autocomplete: f55d2539e2005061ea560da4f57516f44396978c
+  GooglePlaces: a7c299c7f81208ff5575a78e7e93bc654f22f4d2
+
+PODFILE CHECKSUM: ba0d7af98d1a0db7cbf744edd0331fd4de934cd6
+
+COCOAPODS: 1.16.2
