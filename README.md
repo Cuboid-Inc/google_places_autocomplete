@@ -40,7 +40,7 @@ A powerful, UI-agnostic Flutter package for Google Places API integration. Get a
 
 ```yaml
 dependencies:
-  google_places_autocomplete: ^1.0.0
+  google_places_autocomplete: ^2.0.0
 ```
 
 ### 3. Use
@@ -121,14 +121,46 @@ class Prediction {
 
 ```dart
 class PlaceDetails {
+  final String? placeId;
   final String? name;
   final String? formattedAddress;
-  final Location? location;        // .lat, .lng
+  final Location? location;              // .lat, .lng
+  final List<AddressComponent>? addressComponents;  // Full list
+  
+  // Parsed from addressComponents:
+  final String? city;
+  final String? state;
+  final String? country;
+  final String? zipCode;
+  final String? streetAddress;
+  final String? streetNumber;
+  
+  // Contact
   final String? nationalPhoneNumber;
   final String? internationalPhoneNumber;
   final String? googleMapsUri;
   final String? websiteUri;
-  // ... and more
+  
+  // Business info
+  final double? rating;
+  final int? userRatingsTotal;
+  final String? businessStatus;  // OPERATIONAL, CLOSED_TEMPORARILY, etc.
+  final List<String>? types;
+  
+  // Additional
+  final int? utcOffset;
+  final PlusCode? plusCode;      // .globalCode, .compoundCode
+  final Viewport? viewport;      // .northeast, .southwest
+}
+```
+
+### AddressComponent Model
+
+```dart
+class AddressComponent {
+  final String longText;       // Full name: "California"
+  final String? shortText;     // Abbreviated: "CA"
+  final List<String> types;    // e.g., ["administrative_area_level_1"]
 }
 ```
 
@@ -177,7 +209,14 @@ onTap: () async {
 
 ---
 
-## ⚠️ Breaking Changes (v0.1.1)
+## ⚠️ Breaking Changes
+
+### v2.0.0
+- **Minimum Android SDK**: 28 (was 23)
+- **Minimum iOS**: 17.0
+- **Java 17** required for Android builds
+
+### v0.1.1
 
 | Change | Before | After |
 |--------|--------|-------|

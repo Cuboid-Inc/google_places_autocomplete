@@ -2,7 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0] - 2024-12-24
+## [2.0.0] - 2025-12-25
+
+### 🚀 Major SDK Upgrade
+
+- **Android SDK**: Upgraded from `4.1.0` → `5.1.1` (Places SDK for Android)
+- **iOS SDK**: Upgraded from `9.2.0` → `10.6.0` (GooglePlaces)
+- **Android Gradle Plugin**: Upgraded to `8.7.3`
+- **Kotlin**: Upgraded to `2.1.0`
+- **Java Target**: Upgraded from Java 8 → Java 17
+
+### ✨ New Features
+
+- **Complete Address Components** - `PlaceDetails` now includes full `addressComponents` list with:
+  - `AddressComponent` model: `longText`, `shortText`, `types`
+  - Pre-parsed fields: `city`, `state`, `zipCode`, `country`, `streetAddress`, `streetNumber`
+- **New PlaceDetails fields**:
+  - `googleMapsUri` - Direct link to Google Maps
+  - `nationalPhoneNumber` / `internationalPhoneNumber` - Proper phone formats
+  - `businessStatus` - OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY
+  - `types` - Place type list
+  - `utcOffset` - UTC offset in minutes
+  - `plusCode` - Plus Code with `globalCode` and `compoundCode`
+  - `viewport` - Map viewport bounds
+
+### 🔧 Platform Requirements
+
+- **Android**: minSdk 28, compileSdk 35
+- **iOS**: iOS 17.0+
+
+---
+
+## [1.0.0] - 2025-12-24
 
 ### 🏗 Native SDK Migration
 
@@ -11,7 +42,7 @@ All notable changes to this project will be documented in this file.
 - **Session Tokens**: Implemented strict Session Token management to optimize billing (reduces cost by grouping autocomplete queries).
 - **API Key Security**: Supports restricting API keys to Android apps (SHA-1) and iOS apps (Bundle ID) when using native SDKs.
 
-## [0.1.1] - 2024-12-24
+## [0.1.1] - 2025-12-24
 
 ### 🚀 New Features
 

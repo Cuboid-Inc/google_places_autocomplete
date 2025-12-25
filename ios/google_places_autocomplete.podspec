@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'google_places_autocomplete'
-  s.version          = '1.0.0'
+  s.version          = '2.0.0'
   s.summary          = 'Google Places Autocomplete for Flutter'
   s.description      = <<-DESC
 Seamlessly integrate Google Places API into your Flutter app with this package.
@@ -16,7 +16,7 @@ Seamlessly integrate Google Places API into your Flutter app with this package.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.dependency 'GooglePlaces', '10.6.0'
-  s.platform = :ios, '14.0'
+  s.platform = :ios, '17.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
