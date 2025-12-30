@@ -211,6 +211,23 @@ onTap: () async {
 
 ---
 
+## 📦 Android Release Configuration
+
+If you encounter errors in release builds (like `ServiceConfigurationError` or missing classes or the predictions did not fetch in production), add these rules to your `android/app/proguard-rules.pro`:
+
+```properties
+# Keep custom plugin classes
+-keep class com.cuboid.google_places_autocomplete.** { *; }
+
+# Google Places SDK - Required to prevent R8 from stripping reflection-based classes
+# This fixes: ServiceConfigurationError: Provider com.google.android.libraries.places.internal.u1 could not be instantiated
+-keep class com.google.android.libraries.places.** { *; }
+-keepclassmembers class com.google.android.libraries.places.** { *; }
+-dontwarn com.google.android.libraries.places.**
+```
+
+---
+
 ## ⚠️ Breaking Changes
 
 ### v2.0.0
