@@ -225,7 +225,6 @@ If you encounter errors in release builds (like `ServiceConfigurationError` or m
 -keepclassmembers class com.google.android.libraries.places.** { *; }
 -dontwarn com.google.android.libraries.places.**
 ```
-
 ---
 
 ## ⚠️ Breaking Changes
