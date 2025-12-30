@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2025-12-30
+
+### 🚀 Enhancements
+
+- **Robust Error Handling** - implemented comprehensive error handling and detailed logging in the Android plugin.
+- **Improved Logging** - Added detailed logging to the Flutter side (`GooglePlacesAutocomplete` class) for better debugging visibility.
+- **Richer Error Details** - Enhanced `FlutterError` details to expose underlying issues more clearly.
+- **Docs Update** - Added **Android Release Configuration** section to `README.md` with correct ProGuard rules to prevent R8 from stripping necessary classes.
+
 ## [2.0.1] - 2025-12-25
 
 ### 📚 Documentation
