@@ -4,6 +4,11 @@ import 'google_places_autocomplete_method_channel.dart';
 import 'model/place_details.dart';
 import 'model/prediction.dart';
 
+/// The platform interface for Google Places Autocomplete.
+///
+/// This abstract class defines the API that platform-specific implementations
+/// must provide. It extends [PlatformInterface] to ensure proper platform
+/// interface verification.
 abstract class GooglePlacesAutocompletePlatform extends PlatformInterface {
   /// Constructs a GooglePlacesAutocompletePlatform.
   GooglePlacesAutocompletePlatform() : super(token: _token);

@@ -175,6 +175,31 @@ class GooglePlacesAutocomplete {
     originLng = null;
   }
 
+  /// Clears and cancels any pending queued requests for fetching predictions.
+  ///
+  /// Use this when you want to immediately stop any in-flight autocomplete
+  /// requests, such as when the user navigates away, clears the search field,
+  /// or when you want to reset the search state.
+  ///
+  /// After calling this, you can still call [getPredictions] to start new
+  /// searches - the queue system will be automatically re-initialized.
+  ///
+  /// ## Example
+  /// ```dart
+  /// // Clear pending requests when user clears the search field
+  /// onClear: () {
+  ///   places.clearQueue();
+  ///   places.getPredictions(''); // This will return empty list
+  /// }
+  /// ```
+  void clearQueue() {
+    _subscription?.cancel();
+    _subscription = _subject.stream
+        .distinct()
+        .debounceTime(Duration(milliseconds: debounceTime))
+        .listen(_fetchPredictions);
+  }
+
   /// Initializes the native Places client.
   ///
   /// This must be called before using [getPredictions] or [getPlaceDetails].

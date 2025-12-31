@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2025-12-31
+
+### ✨ New Features
+
+- **Clear Queue Method** - Added `clearQueue()` method to cancel pending or ongoing autocomplete prediction requests.
+
+### 📚 Documentation
+
+- **Platform Interface Documentation** - Added missing documentation for `GooglePlacesAutocompletePlatform` class.
+
+---
+
 ## [2.1.0] - 2025-12-30
 
 ### 🚀 Enhancements
