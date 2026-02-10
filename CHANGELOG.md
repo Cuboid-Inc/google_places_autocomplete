@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.2] - 2026-02-10
+
+### 🐛 Bug Fixes
+
+- **Eager Places SDK Initialization** - Fixed crash (`PlacesLightboxActivity` / `PlaceAutocompleteActivity`) caused by the Places SDK's built-in activities being launched (e.g., via map POI tap) before the Dart-side `initialize()` call. The plugin now eagerly initializes the Places SDK in `onAttachedToEngine` using the API key from `AndroidManifest.xml`.
+
+---
+
 ## [2.1.1] - 2025-12-31
 
 ### ✨ New Features
