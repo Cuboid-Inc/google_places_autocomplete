@@ -38,9 +38,36 @@ class GooglePlacesAutocompletePlugin: FlutterPlugin, MethodCallHandler {
             channel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
             channel.setMethodCallHandler(this)
             context = flutterPluginBinding.applicationContext
+            
+            // Eagerly initialize Places SDK to prevent crashes from built-in
+            // activities (PlacesLightboxActivity, PlaceAutocompleteActivity)
+            // that are auto-registered via manifest merger and can be triggered
+            // by map POI interactions before the Dart-side initialize() call.
+            eagerlyInitializePlaces()
+            
             Log.d(TAG, "onAttachedToEngine: Plugin initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "onAttachedToEngine: Failed to initialize plugin", e)
+        }
+    }
+    
+    /**
+     * Attempts to initialize the Places SDK using the API key from AndroidManifest.xml.
+     * This is a safety net — the Dart-side initialize() call will skip re-initialization
+     * since Places.isInitialized() will already return true.
+     */
+    private fun eagerlyInitializePlaces() {
+        if (Places.isInitialized()) return
+        try {
+            val apiKey = getApiKeyFromManifest()
+            if (apiKey != null) {
+                Places.initialize(context, apiKey)
+                Log.d(TAG, "eagerlyInitializePlaces: Places SDK pre-initialized from manifest")
+            } else {
+                Log.w(TAG, "eagerlyInitializePlaces: No API key in manifest, skipping eager init")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "eagerlyInitializePlaces: Could not pre-initialize Places SDK", e)
         }
     }
 
